@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  ${require('html-loader?interpolate!./_template/share.html')}
+  <link rel="icon" href="${require('./img/favicon.png')}">
+  <title>@@_title | Main</title>
+</head>
+
+<body class="sample">
+
+  ${require('html-loader?interpolate!./_template/header.html')}
+
+  <div id="app"></div>
+
+  ${require('html-loader?interpolate!./_template/footer.html')}
+
+</body>
+
+</html>
