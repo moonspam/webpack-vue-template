@@ -11,17 +11,18 @@ console.log(`CopyWebpackPlugin(libs) : ${copyStateLibs}`);
 console.log(`CopyWebpackPlugin(font) : ${copyStateFont}`);
 
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const HtmlBeautifyPlugin = require('html-beautify-webpack-plugin');
+const HtmlBeautifyPlugin = require('@nurminen/html-beautify-webpack-plugin');
+const ESLintPlugin = require('eslint-webpack-plugin');
 
 const siteInfo = require('./site-info');
 
 function generateHtmlPlugins(templateDir) {
-  const templateFiles = fs.readdirSync(templateDir).filter(file => file.substr(-5) === '.html');
-  return templateFiles.map(file => new HtmlWebpackPlugin({
+  const templateFiles = fs.readdirSync(templateDir).filter((file) => file.substr(-5) === '.html');
+  return templateFiles.map((file) => new HtmlWebpackPlugin({
     template: `./${file}`,
     filename: `${file}`,
     minify: {
@@ -33,11 +34,14 @@ function generateHtmlPlugins(templateDir) {
   }));
 }
 
-module.exports = (env) => {
+module.exports = (env, argv) => {
   // Webpack 플러그인
   const plugins = [
+    new ESLintPlugin(),
     new VueLoaderPlugin(),
-    new CleanWebpackPlugin([outputPath]),
+    new CleanWebpackPlugin({
+      protectWebpackAssets: false,
+    }),
     new MiniCssExtractPlugin({
       filename: './css/style.css',
     }),
@@ -118,12 +122,13 @@ module.exports = (env) => {
   return {
     context: path.resolve(__dirname, sourcePath),
     entry: {
-      app: env.NODE_ENV === 'development' ? ['@babel/polyfill', './css/development.scss', './css/style.scss', './js/app.js'] : ['@babel/polyfill', './css/style.scss', './js/app.js'],
+      app: argv.mode === 'development' ? ['./css/development.scss', './css/style.scss', './js/app.js'] : ['./css/style.scss', './js/app.js'],
     },
     output: {
       filename: './js/[name].js',
       path: path.resolve(__dirname, outputPath),
     },
+    target: ['web', 'es5'],
     resolve: {
       alias: {
         vue$: 'vue/dist/vue.esm.js',
@@ -131,16 +136,18 @@ module.exports = (env) => {
       extensions: ['*', '.js', '.vue', '.json'],
     },
     devServer: {
-      open: true,
-      contentBase: path.resolve(__dirname, outputPath),
-      watchContentBase: true,
-      inline: true,
-      stats: 'errors-only',
+      static: {
+        directory: path.resolve(__dirname, sourcePath),
+        watch: true,
+      },
     },
-    mode: env.NODE_ENV === 'development' ? 'development' : 'production',
-    devtool: env.NODE_ENV === 'development' ? 'source-map' : false,
+    infrastructureLogging: {
+      level: 'warn',
+    },
+    mode: argv.mode === 'development' ? 'development' : 'production',
+    devtool: argv.mode === 'development' ? 'source-map' : false,
     performance: {
-      hints: process.env.NODE_ENV === 'production' ? 'warning' : false,
+      hints: argv.mode === 'production' ? 'warning' : false,
     },
     module: {
       rules: [
@@ -151,14 +158,21 @@ module.exports = (env) => {
         {
           test: /\.(sa|sc|c)ss$/,
           use: [
+            argv.mode === 'development' ? 'style-loader'
+              : {
+                loader: MiniCssExtractPlugin.loader,
+                options: {
+                  publicPath: '../',
+                },
+              },
+            'css-loader',
             {
-              loader: MiniCssExtractPlugin.loader,
+              loader: 'sass-loader',
               options: {
-                publicPath: '../',
+                // eslint-disable-next-line global-require
+                implementation: require('sass'),
               },
             },
-            'css-loader',
-            'sass-loader',
           ],
         },
         {
@@ -166,21 +180,16 @@ module.exports = (env) => {
           exclude: /node_modules/,
           loader: 'file-loader',
           options: {
-            name: env.NODE_ENV === 'development' ? '[path][name].[ext]' : '[path][name].[ext]?[hash]',
+            name: argv.mode === 'development' ? '[path][name].[ext]' : '[path][name].[ext]?[hash]',
+            esModule: false,
           },
         },
         {
-          enforce: 'pre',
-          test: /\.js$/,
-          exclude: /node_modules/,
-          loader: 'eslint-loader',
-        },
-        {
-          test: /\.js$/,
+          test: /\.m?js$/,
           exclude: /node_modules/,
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env'],
+            configFile: './.babelrc',
           },
         },
       ],
