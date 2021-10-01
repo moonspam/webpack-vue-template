@@ -140,6 +140,7 @@ module.exports = (env, argv) => {
         directory: path.resolve(__dirname, sourcePath),
         watch: true,
       },
+      open: true,
     },
     infrastructureLogging: {
       level: 'warn',
