@@ -1,5 +1,5 @@
 const path = require('path');
-const fs = require('fs');
+const glob = require('glob');
 
 const sourcePath = './public/src/';
 const outputPath = './public/dist/';
@@ -15,13 +15,12 @@ const TerserPlugin = require('terser-webpack-plugin');
 const siteInfo = require('./site-info');
 
 function generateHtmlPlugins(templateDir) {
-  const templateFiles = fs.readdirSync(templateDir).filter((file) => file.substr(-5) === '.html');
+  var templateFiles = glob.sync(`${templateDir}**/*.html`, { ignore: [`${templateDir}/_template/**/*.html`] }).map((file) => file.replace(templateDir, ''));
+  console.log(templateFiles);
   return templateFiles.map((file) => new HtmlWebpackPlugin({
     template: `./${file}`,
     filename: `${file}`,
-    minify: {
-      removeAttributeQuotes: false,
-    },
+    minify: false,
     hash: true,
     inject: 'body',
     chunks: 'all',
