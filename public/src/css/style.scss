@@ -16,12 +16,16 @@ html, body {
     body#{&} {
       $gray: #ddd;
       $base-font: 'Poor Story', cursive;
-      $img: '../img';
+      $img: '/img';
       background: #e7e7e9 url('#{$img}/bg.jpg') no-repeat center 0;
       background-size: cover;
       text-align: center;
       font: 14px/1.5em $base-font;
       text-shadow: 1px 1px 0 #fff;
+      header, h1, p, footer {
+        box-sizing: border-box;
+        border: 1px solid transparent;
+      }
       header {
         padding: 20px 0;
       }
@@ -36,8 +40,21 @@ html, body {
           font-size: 0.5em;
         }
       }
+      footer {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+      }
       a {
         color: gray;
+      }
+      .app {
+        position: absolute;
+        left: 0;
+        top: 63px;
+        width: 100%;
+        min-height: 470px;
       }
     }
   }

@@ -4,19 +4,13 @@ const fs = require('fs');
 const sourcePath = './public/src/';
 const outputPath = './public/dist/';
 
-const copyStateLibs = fs.existsSync('./public/src/libs') && fs.lstatSync('./src/libs').isDirectory();
-const copyStateFont = fs.existsSync('./public/src/font') && fs.lstatSync('./src/font').isDirectory();
-
-console.log(`CopyWebpackPlugin(libs) : ${copyStateLibs}`);
-console.log(`CopyWebpackPlugin(font) : ${copyStateFont}`);
-
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HtmlBeautifyPlugin = require('@nurminen/html-beautify-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 const siteInfo = require('./site-info');
 
@@ -43,7 +37,7 @@ module.exports = (env, argv) => {
       protectWebpackAssets: false,
     }),
     new MiniCssExtractPlugin({
-      filename: './css/style.css',
+      filename: 'css/style.css',
     }),
   ];
 
@@ -74,50 +68,15 @@ module.exports = (env, argv) => {
         { test: '@@_og_img_width', with: siteInfo.og.img.width },
         { test: '@@_og_img_height', with: siteInfo.og.img.height },
         { test: '@@_og_img_alt', with: siteInfo.og.img.alt },
+        {
+          test: 'content="/img',
+          with: argv.mode === 'development' ? 'content="/img' : `content="${siteInfo.og.img.url}img`,
+        },
       ],
     }),
   ];
 
-  function copyPlugin() {
-    let val = [];
-    if (copyStateLibs && !copyStateFont) {
-      val = [
-        new CopyWebpackPlugin({
-          patterns: [
-            {
-              from: './libs/**/*',
-            },
-          ],
-        }),
-      ];
-    }
-    if (!copyStateLibs && copyStateFont) {
-      val = [
-        new CopyWebpackPlugin({
-          patterns: [
-            {
-              from: './font/**/*',
-            },
-          ],
-        }),
-      ];
-    }
-    if (copyStateLibs && copyStateFont) {
-      val = [
-        new CopyWebpackPlugin({
-          patterns: [
-            {
-              from: './libs/**/*',
-            },
-            {
-              from: './font/**/*',
-            },
-          ],
-        }),
-      ];
-    }
-    return val;
-  }
+  console.log(argv.mode);
 
   return {
     context: path.resolve(__dirname, sourcePath),
@@ -125,8 +84,9 @@ module.exports = (env, argv) => {
       app: argv.mode === 'development' ? ['./css/development.scss', './css/style.scss', './js/app.js'] : ['./css/style.scss', './js/app.js'],
     },
     output: {
-      filename: './js/[name].js',
+      filename: 'js/[name].js',
       path: path.resolve(__dirname, outputPath),
+      publicPath: '/',
     },
     target: ['web', 'es5'],
     resolve: {
@@ -147,6 +107,13 @@ module.exports = (env, argv) => {
     },
     mode: argv.mode === 'development' ? 'development' : 'production',
     devtool: argv.mode === 'development' ? 'source-map' : false,
+    optimization: {
+      minimizer: [
+        new TerserPlugin({
+          extractComments: false,
+        }),
+      ],
+    },
     performance: {
       hints: argv.mode === 'production' ? 'warning' : false,
     },
@@ -163,7 +130,7 @@ module.exports = (env, argv) => {
               : {
                 loader: MiniCssExtractPlugin.loader,
                 options: {
-                  publicPath: '../',
+                  publicPath: '/',
                 },
               },
             'css-loader',
@@ -177,12 +144,10 @@ module.exports = (env, argv) => {
           ],
         },
         {
-          test: /\.(jpe?g|png|gif)$/,
-          exclude: /node_modules/,
-          loader: 'file-loader',
-          options: {
-            name: argv.mode === 'development' ? '[path][name].[ext]' : '[path][name].[ext]?[hash]',
-            esModule: false,
+          test: /\.(gif|png|jpe?g)$/,
+          type: 'asset/resource',
+          generator: {
+            filename: argv.mode === 'development' ? '[path][name][ext]' : '[path][name][ext]?[hash]',
           },
         },
         {
@@ -195,6 +160,6 @@ module.exports = (env, argv) => {
         },
       ],
     },
-    plugins: plugins.concat(copyPlugin()).concat(htmlList).concat(htmlPlugins),
+    plugins: plugins.concat(htmlList).concat(htmlPlugins),
   };
 };

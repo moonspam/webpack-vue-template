@@ -8,10 +8,10 @@ vue.js 기본 템플릿입니다.
 - Clean for Webpack
 - ESLint Loader
 - Mini Css Extract Plugin
-- File Loader
 - HTML Beautify Webpack Plugin
 - HTML Loader
 - HTML Webpack Plugin
+- SASS
 - SASS Loader
 - Vue
 - Vue-loader

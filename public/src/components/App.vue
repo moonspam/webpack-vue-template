@@ -1,16 +1,16 @@
 <template>
   <div>
-    <h1>{{ hangle }}은 사랑입니다.</h1>
-    <router-view></router-view>
+    <transition name="fade">
+      <router-view></router-view>
+    </transition>
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      hangle: '한글',
-    }
-  }
+<style lang="sass">
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .3s;
 }
-</script>
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+}
+</style>
