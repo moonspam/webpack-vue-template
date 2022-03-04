@@ -6,7 +6,7 @@ vue.js 기본 템플릿입니다.
 
 - Babel Loader
 - Clean for Webpack
-- ESLint Loader
+- ESLint
 - Mini Css Extract Plugin
 - HTML Beautify Webpack Plugin
 - HTML Loader
