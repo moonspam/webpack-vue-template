@@ -19,3 +19,4 @@ vue.js 기본 템플릿입니다.
 - Webpack
 - Webpack CLI
 - Webpack Dev Server
+- Webpack Bundle Analyzer
